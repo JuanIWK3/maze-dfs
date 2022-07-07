@@ -3,17 +3,19 @@ import { useCallback } from "react";
 import "./style.scss";
 
 function App() {
-  const size = 20;
+  const size = 50;
   const rows = [...Array(size).keys()];
   const columns = [...Array(size).keys()];
   const [current, setCurrent] = useState<[number, number]>([0, 0]);
   const [count, setCount] = useState(0);
 
-  const [visited, setVisited] = useState<Record<string, boolean>>({});
+  const [visited, setVisited] = useState<
+    Record<string, { closed: boolean; from: number }>
+  >({});
   const [prev, setPrev] = useState<Record<string, string>>({});
 
   const getColor = (row: number, column: number): string => {
-    const color = "black";
+    const color = "white";
     return visited.hasOwnProperty([row, column].toString()) ? color : "white";
   };
 
@@ -69,7 +71,10 @@ function App() {
       ) {
         console.log("up");
         moveUp();
-        setVisited({ ...visited, [current.toString()]: true });
+        setVisited({
+          ...visited,
+          [current.toString()]: { closed: true, from: direction },
+        });
         return true;
       } else if (
         direction === 1 &&
@@ -78,7 +83,10 @@ function App() {
       ) {
         console.log("right");
         moveRight();
-        setVisited({ ...visited, [current.toString()]: true });
+        setVisited({
+          ...visited,
+          [current.toString()]: { closed: true, from: direction },
+        });
         return true;
       } else if (
         direction === 2 &&
@@ -87,7 +95,10 @@ function App() {
       ) {
         console.log("down");
         moveDown();
-        setVisited({ ...visited, [current.toString()]: true });
+        setVisited({
+          ...visited,
+          [current.toString()]: { closed: true, from: direction },
+        });
         return true;
       } else if (
         direction === 3 &&
@@ -96,7 +107,10 @@ function App() {
       ) {
         console.log("left");
         moveLeft();
-        setVisited({ ...visited, [current.toString()]: true });
+        setVisited({
+          ...visited,
+          [current.toString()]: { closed: true, from: direction },
+        });
         return true;
       } else {
         return false;
@@ -108,7 +122,13 @@ function App() {
       while (!move(getDirection())) {
         if (conta > 20) {
           if (prev.hasOwnProperty(current.toString())) {
-            setVisited({ ...visited, [current.toString()]: true });
+            setVisited({
+              ...visited,
+              [current.toString()]: {
+                ...visited[current.toString()],
+                closed: true,
+              },
+            });
             const previous = prev[current.toString()].split(",");
             console.log({ current }, { previous });
 
@@ -139,7 +159,7 @@ function App() {
                 current[0] === row && current[1] === column ? " current" : ""
               } ${
                 visited.hasOwnProperty([row, column].toString())
-                  ? " visited"
+                  ? ` visited from-${visited[[row, column].toString()].from}`
                   : "notvisited"
               }`}
             >
