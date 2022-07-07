@@ -1,0 +1,17 @@
+.cell {
+  width: 50px;
+  height: 50px;
+  border: 1px solid rgb(255, 255, 255);
+
+  &.current {
+    background-color: rgb(27, 108, 208) !important;
+  }
+
+  &.visited {
+    background-color: rgb(84, 157, 169);
+  }
+}
+
+.row {
+  display: flex;
+}
