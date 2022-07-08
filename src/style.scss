@@ -4,12 +4,26 @@
 
 .App {
   margin: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+main {
+  border: 10px solid black;
+  z-index: 3;
 }
 
 .cell {
-  min-width: 50px;
-
-  height: 50px;
   // border: 1px solid rgb(0, 0, 0);
   margin: -1px;
 
@@ -32,6 +46,19 @@
   &.from-3 {
     border-top: 1px solid black;
     border-bottom: 1px solid black;
+  }
+
+  &.border-left {
+    border-left: none;
+  }
+  &.border-right {
+    border-right: none;
+  }
+  &.border-top {
+    border-top: none;
+  }
+  &.border-bottom {
+    border-bottom: none;
   }
 }
 

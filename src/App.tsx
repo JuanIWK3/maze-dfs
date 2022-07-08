@@ -3,11 +3,10 @@ import { useCallback } from "react";
 import "./style.scss";
 
 function App() {
-  const size = 50;
+  const [size, setSize] = useState(10);
   const rows = [...Array(size).keys()];
   const columns = [...Array(size).keys()];
   const [current, setCurrent] = useState<[number, number]>([0, 0]);
-  const [count, setCount] = useState(0);
 
   const [visited, setVisited] = useState<
     Record<string, { closed: boolean; from: number }>
@@ -142,32 +141,66 @@ function App() {
           conta++;
         }
       }
+    } else {
+      setCurrent([0, 0]);
     }
   }, [current, isVisited, prev, visited]);
 
   return (
     <div className="App">
-      {rows.map((row) => (
-        <div key={row} className="row">
-          {columns.map((column) => (
-            <div
-              key={column}
-              style={{
-                backgroundColor: getColor(row, column),
-              }}
-              className={`cell${
-                current[0] === row && current[1] === column ? " current" : ""
-              } ${
-                visited.hasOwnProperty([row, column].toString())
-                  ? ` visited from-${visited[[row, column].toString()].from}`
-                  : "notvisited"
-              }`}
-            >
-              {/* {row}:{column} */}
-            </div>
-          ))}
-        </div>
-      ))}
+      <header>
+        <label htmlFor="size">Size of the maze</label>
+        <input
+          type="text"
+          name="size"
+          onChange={(e) => {
+            setSize(+e.target.value);
+          }}
+        />
+        <button
+          onClick={() => {
+            setCurrent([0, 0]);
+            setVisited({});
+          }}
+        >
+          Generate Maze
+        </button>
+      </header>
+      <main>
+        {rows.map((row) => (
+          <div key={row} className="row">
+            {columns.map((column) => (
+              <div
+                key={column}
+                style={{
+                  width:
+                    Math.min(window.screen.height, window.screen.width) /
+                    (size + 4),
+                  height:
+                    Math.min(window.screen.height, window.screen.width) /
+                    (size + 4),
+                  backgroundColor: getColor(row, column),
+                }}
+                className={`cell${
+                  current[0] === row && current[1] === column ? " current" : ""
+                } ${
+                  visited.hasOwnProperty([row, column].toString())
+                    ? ` visited from-${visited[[row, column].toString()].from}`
+                    : "notvisited"
+                } ${row === 0 && "border-top"}
+                ${row === size - 1 && "border-bottom"}
+                ${column === 0 && "border-left"}
+                ${column === size - 1 && "border-right"}
+                
+                
+                `}
+              >
+                {/* {row}:{column} */}
+              </div>
+            ))}
+          </div>
+        ))}
+      </main>
     </div>
   );
 }
