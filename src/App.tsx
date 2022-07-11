@@ -1,206 +1,140 @@
 import React, { useEffect, useState } from "react";
 import { useCallback } from "react";
+import { ICell } from "./components/Cell";
+import { Maze } from "./components/Maze";
 import "./style.scss";
 
 function App() {
   const [size, setSize] = useState(10);
-  const rows = [...Array(size).keys()];
-  const columns = [...Array(size).keys()];
-  const [current, setCurrent] = useState<[number, number]>([0, 0]);
+  const [cells, setCells] = useState<ICell[]>([]);
 
-  const [visited, setVisited] = useState<
-    Record<string, { closed: boolean; from: number }>
-  >({});
-  const [prev, setPrev] = useState<Record<string, string>>({});
-
-  const getColor = (row: number, column: number): string => {
-    const color = "white";
-    return visited.hasOwnProperty([row, column].toString()) ? color : "white";
-  };
-
-  const getDirection = () => {
-    return Math.floor(Math.random() * 4);
-  };
-
-  const isVisited = useCallback(
-    (row: number, column: number) => {
-      return visited.hasOwnProperty([row, column].toString());
+  const handleSizeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (+e.target.value >= 2) {
+        setSize(parseInt(e.target.value));
+      }
     },
-    [visited]
+    []
   );
 
-  useEffect(() => {
-    const move = (direction: number) => {
-      const moveUp = () => {
-        setPrev({
-          ...prev,
-          [[current[0] - 1, current[1]].toString()]: [current].toString(),
-        });
-        setCurrent([current[0] - 1, current[1]]);
-      };
+  const createCells = () => {
+    const initialCells: ICell[] = [];
 
-      const moveDown = () => {
-        setPrev({
-          ...prev,
-          [[current[0] + 1, current[1]].toString()]: [current].toString(),
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        initialCells.push({
+          x: i,
+          y: j,
+          visited: false,
+          current: false,
+          walls: {
+            top: true,
+            right: true,
+            bottom: true,
+            left: true,
+          },
+          size,
         });
-        setCurrent([current[0] + 1, current[1]]);
-      };
-
-      const moveLeft = () => {
-        setPrev({
-          ...prev,
-          [[current[0], current[1] - 1].toString()]: [current].toString(),
-        });
-        setCurrent([current[0], current[1] - 1]);
-      };
-
-      const moveRight = () => {
-        setPrev({
-          ...prev,
-          [[current[0], current[1] + 1].toString()]: [current].toString(),
-        });
-        setCurrent([current[0], current[1] + 1]);
-      };
-
-      if (
-        direction === 0 &&
-        current[0] !== 0 &&
-        !isVisited(current[0] - 1, current[1])
-      ) {
-        console.log("up");
-        moveUp();
-        setVisited({
-          ...visited,
-          [current.toString()]: { closed: true, from: direction },
-        });
-        return true;
-      } else if (
-        direction === 1 &&
-        current[1] !== size - 1 &&
-        !isVisited(current[0], current[1] + 1)
-      ) {
-        console.log("right");
-        moveRight();
-        setVisited({
-          ...visited,
-          [current.toString()]: { closed: true, from: direction },
-        });
-        return true;
-      } else if (
-        direction === 2 &&
-        current[0] !== size - 1 &&
-        !isVisited(current[0] + 1, current[1])
-      ) {
-        console.log("down");
-        moveDown();
-        setVisited({
-          ...visited,
-          [current.toString()]: { closed: true, from: direction },
-        });
-        return true;
-      } else if (
-        direction === 3 &&
-        current[1] !== 0 &&
-        !isVisited(current[0], current[1] - 1)
-      ) {
-        console.log("left");
-        moveLeft();
-        setVisited({
-          ...visited,
-          [current.toString()]: { closed: true, from: direction },
-        });
-        return true;
-      } else {
-        return false;
       }
-    };
-    let conta = 0;
-
-    if (Object.keys(visited).length !== size * size) {
-      while (!move(getDirection())) {
-        if (conta > 20) {
-          if (prev.hasOwnProperty(current.toString())) {
-            setVisited({
-              ...visited,
-              [current.toString()]: {
-                ...visited[current.toString()],
-                closed: true,
-              },
-            });
-            const previous = prev[current.toString()].split(",");
-            console.log({ current }, { previous });
-
-            setCurrent([+previous[0], +previous[1]]);
-            break;
-          } else {
-            break;
-          }
-        } else {
-          move(getDirection());
-          conta++;
-        }
-      }
-    } else {
-      setCurrent([0, 0]);
     }
-  }, [current, isVisited, prev, visited]);
+
+    return initialCells;
+  };
+
+  const getNeighbors = (cell: ICell) => {
+    const neighbors: ICell[] = [];
+    const { x, y } = cell;
+
+    if (x === 0 && y === 0) {
+      // top left corner
+      neighbors.push(cells[cell.x + 1]);
+      neighbors.push(cells[cell.y + 1]);
+    } else if (x === size - 1 && y === size - 1) {
+      // bottom right corner
+      neighbors.push(cells[cell.x - 1]);
+      neighbors.push(cells[cell.y - 1]);
+    } else if (x === 0 && y === size - 1) {
+      // top right corner
+      neighbors.push(cells[cell.x + 1]);
+      neighbors.push(cells[cell.y - 1]);
+    } else if (x === size - 1 && y === 0) {
+      // bottom left corner
+      neighbors.push(cells[cell.x - 1]);
+      neighbors.push(cells[cell.y + 1]);
+    } else if (x === 0) {
+      // top row
+      neighbors.push(cells[cell.x + 1]);
+      neighbors.push(cells[cell.y - 1]);
+      neighbors.push(cells[cell.y + 1]);
+    } else if (y === 0) {
+      // left column
+      neighbors.push(cells[cell.x - 1]);
+      neighbors.push(cells[cell.x + 1]);
+      neighbors.push(cells[cell.y + 1]);
+    } else if (x === size - 1) {
+      // right column
+      neighbors.push(cells[cell.x - 1]);
+      neighbors.push(cells[cell.x + 1]);
+      neighbors.push(cells[cell.y - 1]);
+    } else if (y === size - 1) {
+      // bottom row
+      neighbors.push(cells[cell.x - 1]);
+      neighbors.push(cells[cell.x + 1]);
+      neighbors.push(cells[cell.y - 1]);
+    } else {
+      // middle cells
+      neighbors.push(cells[cell.x - 1]);
+      neighbors.push(cells[cell.x + 1]);
+      neighbors.push(cells[cell.y - 1]);
+      neighbors.push(cells[cell.y + 1]);
+    }
+
+    return neighbors;
+  };
+
+  useEffect(() => {
+    if (!cells.length) {
+      setCells(createCells());
+      return;
+    }
+
+    const visitedCells: ICell[] = [];
+
+    for (const neighbor of getNeighbors(cells[0])) {
+      console.log(neighbor);
+    }
+  }, [cells, cells.length, createCells, size]);
 
   return (
     <div className="App">
       <header>
         <label htmlFor="size">Size of the maze</label>
         <input
-          type="text"
+          type="number"
+          min={2}
           name="size"
           onChange={(e) => {
-            setSize(+e.target.value);
+            handleSizeChange(e);
           }}
         />
         <button
           onClick={() => {
-            setCurrent([0, 0]);
-            setVisited({});
+            setCells([]);
           }}
         >
           Generate Maze
         </button>
+        {cells.length}
       </header>
       <main>
-        {rows.map((row) => (
-          <div key={row} className="row">
-            {columns.map((column) => (
-              <div
-                key={column}
-                style={{
-                  width:
-                    Math.min(window.screen.height, window.screen.width) /
-                    (size + 4),
-                  height:
-                    Math.min(window.screen.height, window.screen.width) /
-                    (size + 4),
-                  backgroundColor: getColor(row, column),
-                }}
-                className={`cell${
-                  current[0] === row && current[1] === column ? " current" : ""
-                } ${
-                  visited.hasOwnProperty([row, column].toString())
-                    ? ` visited from-${visited[[row, column].toString()].from}`
-                    : "notvisited"
-                } ${row === 0 && "border-top"}
-                ${row === size - 1 && "border-bottom"}
-                ${column === 0 && "border-left"}
-                ${column === size - 1 && "border-right"}
-                
-                
-                `}
-              >
-                {/* {row}:{column} */}
-              </div>
-            ))}
-          </div>
-        ))}
+        <Maze size={size} />
       </main>
+      <footer>
+        Made by{" "}
+        <a href="https://github.com/juaniwk3" target="blank">
+          Juan IWK3
+        </a>
+      </footer>
     </div>
   );
 }
