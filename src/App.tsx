@@ -151,8 +151,9 @@ function App() {
       <header>
         <label htmlFor="size">Size of the maze</label>
         <input
-          type="text"
+          type="number"
           name="size"
+          min={2}
           onChange={(e) => {
             setSize(+e.target.value);
           }}
