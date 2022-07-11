@@ -98,6 +98,10 @@ function App() {
       return;
     }
 
+    // Mark all cells as unvisited
+    const notVisitedCells = cells.filter((cell) => !cell.visited);
+
+    // Pick a random cell to start with
     const visitedCells: ICell[] = [];
 
     for (const neighbor of getNeighbors(cells[0])) {
