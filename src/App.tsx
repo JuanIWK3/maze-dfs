@@ -68,7 +68,6 @@ function App() {
         current[0] !== 0 &&
         !isVisited(current[0] - 1, current[1])
       ) {
-        console.log("up");
         moveUp();
         setVisited({
           ...visited,
@@ -80,7 +79,6 @@ function App() {
         current[1] !== size - 1 &&
         !isVisited(current[0], current[1] + 1)
       ) {
-        console.log("right");
         moveRight();
         setVisited({
           ...visited,
@@ -92,7 +90,6 @@ function App() {
         current[0] !== size - 1 &&
         !isVisited(current[0] + 1, current[1])
       ) {
-        console.log("down");
         moveDown();
         setVisited({
           ...visited,
@@ -104,7 +101,6 @@ function App() {
         current[1] !== 0 &&
         !isVisited(current[0], current[1] - 1)
       ) {
-        console.log("left");
         moveLeft();
         setVisited({
           ...visited,
@@ -129,7 +125,6 @@ function App() {
               },
             });
             const previous = prev[current.toString()].split(",");
-            console.log({ current }, { previous });
 
             setCurrent([+previous[0], +previous[1]]);
             break;
