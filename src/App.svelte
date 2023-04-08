@@ -1,92 +1,96 @@
 <script lang="ts">
   let speed = 1;
-  let size = 10;
+  let size = 5;
   let pos = { x: 0, y: 0 };
   let visited = new Set();
   let prev = new Map();
   let visitedFrom = new Map();
   let stuck = 0;
-  let prevDirection = 0;
+  let directionsTried = new Set();
 
   let getRandomUniqueDirection = () => {
     let direction = Math.floor(Math.random() * 4);
 
-    if (direction === prevDirection) {
-      direction = (direction + 1) % 4;
+    // If we've tried all directions, backtrack
+    if (directionsTried.size === 4) {
+      directionsTried.clear();
+      stuck = 100;
     }
 
-    prevDirection = direction;
+    // If we've tried this direction before, try again
+    while (directionsTried.has(direction)) {
+      direction = Math.floor(Math.random() * 4);
+    }
 
     return direction;
   };
 
   let move = () => {
     const direction = getRandomUniqueDirection();
+    // 0 = up, 1 = right, 2 = down, 3 = left
+
     let next = { x: pos.x, y: pos.y };
-
-    const moveUp = () => {
-      prev.set(`${next.x}:${next.y}`, "2");
-    };
-
-    const moveDown = () => {
-      prev.set(`${next.x}:${next.y}`, "0");
-    };
-
-    const moveLeft = () => {
-      prev.set(`${next.x}:${next.y}`, "1");
-    };
-
-    const moveRight = () => {
-      prev.set(`${next.x}:${next.y}`, "3");
-    };
 
     if (
       direction === 0 &&
       pos.x !== 0 &&
-      !visitedFrom.has(`${pos.x - 1}:${pos.y}`)
+      !visited.has(`${pos.x - 1}:${pos.y}`)
     ) {
+      console.log("up");
+      visitedFrom.set(`${pos.x}:${pos.y}`, direction);
       next.x--;
-      moveUp();
     } else if (
       direction === 1 &&
-      pos.y !== 0 &&
-      !visitedFrom.has(`${pos.x}:${pos.y - 1}`)
+      pos.y !== size - 1 &&
+      !visited.has(`${pos.x}:${pos.y + 1}`)
     ) {
-      next.y--;
-      moveLeft();
+      console.log("right");
+      visitedFrom.set(`${pos.x}:${pos.y}`, direction);
+      next.y++;
     } else if (
       direction === 2 &&
       pos.x !== size - 1 &&
-      !visitedFrom.has(`${pos.x + 1}:${pos.y}`)
+      !visited.has(`${pos.x + 1}:${pos.y}`)
     ) {
+      console.log("down");
+      visitedFrom.set(`${pos.x}:${pos.y}`, direction);
       next.x++;
-      moveDown();
     } else if (
       direction === 3 &&
-      pos.y !== size - 1 &&
-      !visitedFrom.has(`${pos.x}:${pos.y + 1}`)
+      pos.y !== 0 &&
+      !visited.has(`${pos.x}:${pos.y - 1}`)
     ) {
-      next.y++;
-      moveRight();
+      console.log("left");
+      visitedFrom.set(`${pos.x}:${pos.y}`, direction);
+      next.y--;
     }
 
     if (visited.has(`${next.x}:${next.y}`)) {
       stuck++;
+      directionsTried.add(direction);
+      return;
     } else {
-      visited.add(`${next.x}:${next.y}`);
-      visitedFrom.set(`${next.x}:${next.y}`, direction);
-      pos = next;
       stuck = 0;
+      directionsTried.clear();
+
+      visited.add(`${next.x}:${next.y}`);
+      prev.set(`${pos.x}:${pos.y}`, direction);
+      pos = next;
     }
   };
 
-  let start = () => {
+  const reset = () => {
     visited.clear();
     prev.clear();
     visitedFrom.clear();
     stuck = 0;
     pos = { x: 0, y: 0 };
     visited.add("0:0");
+    visitedFrom.set("0:0", "none");
+  };
+
+  let start = () => {
+    reset();
 
     const int = setInterval(() => {
       if (visited.size === size * size) {
@@ -99,9 +103,10 @@
       if (visited.size === size * size) {
         console.log("done");
         clearInterval(int);
+        pos = { x: 0, y: 0 };
       }
 
-      if (stuck > 4) {
+      if (stuck > 10) {
         if (prev.size === 0) {
           console.log("stuck");
           clearInterval(int);
@@ -127,15 +132,10 @@
   };
 
   const getVisitedFrom = (x: number, y: number) => {
-    return visitedFrom.get(`${x}:${y}`);
-  };
-
-  const reset = () => {
-    visited.clear();
-    prev.clear();
-    visitedFrom.clear();
-    stuck = 0;
-    pos = { x: 0, y: 0 };
+    if (visitedFrom.has(`${x}:${y}`)) {
+      return `${x} ${y} from-${visitedFrom.get(`${x}:${y}`)}`;
+    }
+    return "";
   };
 </script>
 
@@ -165,8 +165,14 @@
       <div class="row">
         {#each Array(size) as _, j}
           <div
-            class="cell {visited.has(`${i}:${j}`) ? 'visited' : ''} 
-            {pos.x === i && pos.y === j ? 'current' : ''}"
+            class="cell {visited.has(`${i}:${j}`) ? 'visited' : ''}
+            {pos.x === i && pos.y === j ? 'current' : ''}
+            {getVisitedFrom(i, j)}
+            {i === 0 ? 'border-top' : ''}
+            {j === 0 ? 'border-left' : ''}
+            {i === size - 1 ? 'border-bottom' : ''}
+            {j === size - 1 ? 'border-right' : ''}
+            "
           >
             {i}:{j}
           </div>
@@ -200,9 +206,11 @@
     border: 1px solid $accent;
     user-select: none;
     width: 100%;
-    height: 100%;
+    height: 90%;
     overflow: hidden;
     aspect-ratio: 1/1;
+    max-height: 70vh;
+    max-width: 70vh;
 
     .row {
       display: flex;
@@ -222,6 +230,37 @@
         width: 100%;
         height: 100%;
         font-size: small;
+        margin: -1px;
+
+        &.from-0 {
+          border-right: 1px solid black;
+          border-left: 1px solid black;
+        }
+        &.from-1 {
+          border-top: 1px solid black;
+          border-bottom: 1px solid black;
+        }
+        &.from-2 {
+          border-right: 1px solid black;
+          border-left: 1px solid black;
+        }
+        &.from-3 {
+          border-top: 1px solid black;
+          border-bottom: 1px solid black;
+        }
+
+        &.border-left {
+          border-left: none;
+        }
+        &.border-right {
+          border-right: none;
+        }
+        &.border-top {
+          border-top: none;
+        }
+        &.border-bottom {
+          border-bottom: none;
+        }
 
         &.visited {
           color: $accent;
