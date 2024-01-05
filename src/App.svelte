@@ -23,7 +23,10 @@
         x: 0,
         y: 0,
         visited: true,
-        visitedFrom: null,
+        visitedFrom: {
+          x: 0,
+          y: 0,
+        },
       },
     ];
     directionsTried = new Set<string>();
@@ -45,17 +48,16 @@
       )?.visitedFrom;
 
       if (!previousCell) {
-        console.log("no previous visited");
         stop = true;
 
         setTimeout(() => {
-          reject("no previous");
+          reject("no previous cell visited");
         }, speed);
       }
 
       pos = {
-        x: previousCell!.x,
-        y: previousCell!.y,
+        x: previousCell.x,
+        y: previousCell.y,
       };
 
       setTimeout(() => {
@@ -72,7 +74,6 @@
     const newPos = chooseNewPos(pos, size, visited);
 
     while (!newPos) {
-      console.log("stuck");
       await backTrack();
 
       return move();
@@ -93,13 +94,34 @@
 
     pos = newPos;
 
-    if (visited.length === size * size - 1) {
+    if (visited.length === size * size) {
       console.log("finished");
     }
 
     setTimeout(() => {
       move();
     }, speed);
+  }
+
+  function visitedFromDirection(cell: Cell | undefined) {
+    if (!cell) {
+      return "";
+    }
+    if (cell.visitedFrom) {
+      if (cell.visitedFrom.x === cell.x) {
+        if (cell.visitedFrom.y > cell.y) {
+          return "right";
+        } else {
+          return "left";
+        }
+      } else {
+        if (cell.visitedFrom.x > cell.x) {
+          return "bottom";
+        } else {
+          return "top";
+        }
+      }
+    }
   }
 </script>
 
@@ -112,6 +134,7 @@
         <input
           class="border px-4 py-2 rounded"
           min="2"
+          max="200"
           id="size"
           type="number"
           bind:value={size}
@@ -137,13 +160,16 @@
 
   <div class="flex w-full h-[70vh] justify-center items-center">
     <div
-      class="h-full aspect-square maze flex flex-col mt-40 m-16 border-blue-900 border-2"
+      class="h-full bg-white-100 aspect-square maze flex flex-col mt-40 m-16 border-blue-900 border-4"
     >
       {#each Array(size) as _, i (i)}
         <div class="row flex items-center justify-center">
           {#each Array(size) as _, j (j)}
             <div
-              class="cell w-full h-full aspect-square flex items-center justify-center text-blue-500 transition-all transition-200"
+              class="{visitedFromDirection(
+                visited.find((cell) => cell.x === i && cell.y === j)
+              )}                                        
+              cell w-full h-full aspect-square flex items-center justify-center text-blue-500 transition-all transition-200"
               class:current={pos.x === i && pos.y === j}
               class:visited={visited.some(
                 (cell) => cell.x === i && cell.y === j
@@ -160,10 +186,29 @@
 
 <style lang="postcss">
   .current {
-    background-color: dodgerblue !important;
+    background-color: #2563eb !important;
+    margin: 16px;
+  }
+
+  .cell {
+    margin: 0px;
+    border-right: 1px solid black;
+    border-bottom: 1px solid black;
   }
 
   .visited {
-    @apply bg-blue-200 text-white;
+  }
+
+  .top {
+    border-bottom: 1px solid #fff;
+  }
+  .bottom {
+    border-bottom: 1px solid #fff;
+  }
+  .left {
+    border-right: 1px solid #fff;
+  }
+  .right {
+    border-right: 1px solid #fff;
   }
 </style>
